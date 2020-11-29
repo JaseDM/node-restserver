@@ -50,7 +50,7 @@ app.post('/login', (req, res) => {
         res.json({
             ok: true,
             usuarioDB,
-            token: process.env.SEED
+            token
         })
 
     })
