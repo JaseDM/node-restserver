@@ -5,12 +5,16 @@ const bcrypt = require('bcrypt');
 const _ = require('underscore');
 
 const app = express();
+
 const Usuario = require('../models/usuario');
 
+const { verificarToken, verificarAdmin_Role } = require('../middlewares/autenticaion');
 
 
 
-app.get('/usuario', function (req, res) {
+app.get('/usuario', verificarToken ,(req, res) => {
+    let admin = req.usuario.nombre;
+    
 
     // req.query recoje parametros opcionales
     // en el caso de no venir el dato let desde = 0
@@ -47,7 +51,8 @@ app.get('/usuario', function (req, res) {
                     res.json({
                         ok: true,
                         usuarios,
-                        contador
+                        contador,
+                        admin
                     })
                 })
 
@@ -59,8 +64,8 @@ app.get('/usuario', function (req, res) {
 
 
 // Petición POST para nuevo usuario  
-app.post('/usuario', function (req, res) {
-
+app.post('/usuario', [ verificarToken, verificarAdmin_Role ],(req, res) => {
+    let admin = req.usuario.nombre;
     // Recuperamos el objeto del body y se lo asignamos a una nueva variable
     let body = req.body;
 
@@ -89,13 +94,15 @@ app.post('/usuario', function (req, res) {
         // Si no hay errores, devuelve un ok y el objeto del body
         res.json({
             ok: true,
-            usuario: usuarioDB
+            usuario: usuarioDB,
+            admin
         })
     });
 })
 
 // Petición PUT para actualizar un registro de db
-app.put('/usuario/:id', function (req, res) {
+app.put('/usuario/:id', [ verificarToken, verificarAdmin_Role ], (req, res)=> {
+    let admin = req.usuario.admin;
     // Guardamos el parametro id de la url
     let id = req.params.id;
     // Guerdamos el objeto con los datos que nos llega de body
@@ -117,13 +124,14 @@ app.put('/usuario/:id', function (req, res) {
 
         res.json({
             ok: true,
-            usuario: usuarioDB
+            usuario: usuarioDB,
+            admin
         });
 
     })
 });
 
-app.delete('/usuario/:id', function (req, res){
+app.delete('/usuario/:id', [ verificarToken, verificarAdmin_Role ], (req, res) => {
 
     let id = req.params.id;
     let body = {
@@ -153,39 +161,9 @@ app.delete('/usuario/:id', function (req, res){
 
     
 
-})
-
-
-app.delete('/usuarioborrado/:id', function (req, res) {
-
-    let id = req.params.id;
-    
-    Usuario.findByIdAndRemove(id, (err, usuarioBorrado) =>{
-
-        if(err) {
-            return res.status(400).json({
-                ok: false,
-                err
-            });
-        }
-
-        if(usuarioBorrado === null) {
-            return res.status(400).json({
-                ok: false,
-                err: 'Usuario no encontrado'
-            });
-        }
-
-        res.json({
-            ok: true,
-            usuario: usuarioBorrado
-        })
-
-
-
-    })
-
 });
+
+
 
 
 module.exports = app;
